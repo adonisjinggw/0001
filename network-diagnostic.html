@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络连接诊断工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .diagnostic-item {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #e2e8f0;
+        }
+        .diagnostic-item.testing {
+            border-left-color: #3182ce;
+            background: #ebf8ff;
+        }
+        .diagnostic-item.success {
+            border-left-color: #38a169;
+            background: #f0fff4;
+        }
+        .diagnostic-item.error {
+            border-left-color: #e53e3e;
+            background: #fed7d7;
+        }
+        .btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #3182ce;
+        }
+        .log {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success { background: #38a169; color: white; }
+        .status.error { background: #e53e3e; color: white; }
+        .status.testing { background: #3182ce; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 网络连接诊断工具</h1>
+        
+        <div class="diagnostic-item">
+            <h3>🌐 基础网络连接测试</h3>
+            <div id="basic-network">
+                <span class="status testing">等待测试</span>
+                <span>检查基础网络连接...</span>
+            </div>
+        </div>
+
+        <div class="diagnostic-item">
+            <h3>🔥 火山引擎API连接测试</h3>
+            <div id="volcengine-api">
+                <span class="status testing">等待测试</span>
+                <span>检查火山引擎API可达性...</span>
+            </div>
+        </div>
+
+        <div class="diagnostic-item">
+            <h3>🌍 国际网络连接测试</h3>
+            <div id="international-network">
+                <span class="status testing">等待测试</span>
+                <span>检查国际网络连接（VPN检测）...</span>
+            </div>
+        </div>
+
+        <div class="diagnostic-item">
+            <h3>🔧 浏览器环境检测</h3>
+            <div id="browser-env">
+                <span class="status testing">等待测试</span>
+                <span>检查浏览器环境和功能支持...</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="btn" onclick="runDiagnostics()">🚀 开始诊断</button>
+            <button class="btn" onclick="clearLog()">🗑️ 清除日志</button>
+        </div>
+
+        <div class="log" id="diagnostic-log">
+            <div>📋 诊断日志将在这里显示...</div>
+        </div>
+    </div>
+
+    <script>
+        let logElement = document.getElementById('diagnostic-log');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            logElement.innerHTML += `<div>[${timestamp}] ${prefix} ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            const statusSpan = element.querySelector('.status');
+            const textSpan = element.querySelector('span:last-child');
+            
+            statusSpan.className = `status ${status}`;
+            statusSpan.textContent = status === 'success' ? '✅ 成功' : 
+                                   status === 'error' ? '❌ 失败' : '🔄 测试中';
+            textSpan.textContent = message;
+        }
+
+        function clearLog() {
+            logElement.innerHTML = '<div>📋 诊断日志已清除...</div>';
+        }
+
+        async function testBasicNetwork() {
+            log('开始基础网络连接测试...');
+            updateStatus('basic-network', 'testing', '正在测试基础网络连接...');
+            
+            try {
+                const response = await fetch('https://www.baidu.com', {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+                
+                updateStatus('basic-network', 'success', '基础网络连接正常');
+                log('基础网络连接测试通过', 'success');
+                return true;
+            } catch (error) {
+                updateStatus('basic-network', 'error', '基础网络连接失败');
+                log(`基础网络连接失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testVolcengineAPI() {
+            log('开始火山引擎API连接测试...');
+            updateStatus('volcengine-api', 'testing', '正在测试火山引擎API连接...');
+            
+            try {
+                const response = await fetch('https://visual.volcengineapi.com', {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+                
+                updateStatus('volcengine-api', 'success', '火山引擎API连接正常');
+                log('火山引擎API连接测试通过', 'success');
+                return true;
+            } catch (error) {
+                updateStatus('volcengine-api', 'error', '火山引擎API连接失败');
+                log(`火山引擎API连接失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testInternationalNetwork() {
+            log('开始国际网络连接测试...');
+            updateStatus('international-network', 'testing', '正在测试国际网络连接...');
+            
+            try {
+                const response = await fetch('https://www.google.com', {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-cache'
+                });
+                
+                updateStatus('international-network', 'success', '国际网络连接正常（可能使用VPN）');
+                log('国际网络连接测试通过，检测到可能的VPN连接', 'success');
+                return true;
+            } catch (error) {
+                updateStatus('international-network', 'error', '国际网络连接失败（无VPN或VPN异常）');
+                log(`国际网络连接失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        function testBrowserEnvironment() {
+            log('开始浏览器环境检测...');
+            updateStatus('browser-env', 'testing', '正在检测浏览器环境...');
+            
+            const checks = {
+                'Fetch API': typeof fetch !== 'undefined',
+                'Web Crypto API': typeof crypto !== 'undefined' && typeof crypto.subtle !== 'undefined',
+                'Local Storage': typeof localStorage !== 'undefined',
+                'Console API': typeof console !== 'undefined'
+            };
+
+            let allPassed = true;
+            for (const [feature, supported] of Object.entries(checks)) {
+                if (supported) {
+                    log(`${feature}: 支持`, 'success');
+                } else {
+                    log(`${feature}: 不支持`, 'error');
+                    allPassed = false;
+                }
+            }
+
+            if (allPassed) {
+                updateStatus('browser-env', 'success', '浏览器环境完全兼容');
+                log('浏览器环境检测通过', 'success');
+            } else {
+                updateStatus('browser-env', 'error', '浏览器环境存在兼容性问题');
+                log('浏览器环境检测发现问题', 'error');
+            }
+
+            // 额外信息
+            log(`浏览器: ${navigator.userAgent}`);
+            log(`当前URL: ${window.location.href}`);
+            
+            return allPassed;
+        }
+
+        async function runDiagnostics() {
+            log('🚀 开始完整网络诊断...');
+            
+            // 清除之前的状态
+            ['basic-network', 'volcengine-api', 'international-network', 'browser-env'].forEach(id => {
+                updateStatus(id, 'testing', '等待测试...');
+            });
+
+            // 依次执行测试
+            const basicResult = await testBasicNetwork();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const volcengineResult = await testVolcengineAPI();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const internationalResult = await testInternationalNetwork();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const browserResult = testBrowserEnvironment();
+
+            // 生成诊断报告
+            log('📊 诊断报告生成中...');
+            
+            if (!basicResult) {
+                log('🔴 严重问题：基础网络连接失败，请检查网络设置', 'error');
+            } else if (!volcengineResult && internationalResult) {
+                log('🟡 VPN问题：VPN可能阻止了火山引擎API访问，建议暂时关闭VPN', 'error');
+            } else if (!volcengineResult && !internationalResult) {
+                log('🟡 网络限制：可能存在防火墙或网络限制', 'error');
+            } else if (volcengineResult && basicResult) {
+                log('🟢 网络状态良好：所有连接测试通过', 'success');
+            }
+
+            if (!browserResult) {
+                log('🔴 浏览器问题：浏览器环境不兼容，建议更新浏览器', 'error');
+            }
+
+            log('✅ 诊断完成！请根据上述结果进行相应的网络调整。');
+        }
+
+        // 页面加载时显示基本信息
+        window.onload = function() {
+            log('🔍 网络诊断工具已加载');
+            log('点击"开始诊断"按钮开始检测网络状况');
+        };
+    </script>
+</body>
+</html> 

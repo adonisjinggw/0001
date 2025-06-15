@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>原始诊断测试</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      color: white;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .test-result {
+      background: rgba(255,255,255,0.2);
+      padding: 20px;
+      border-radius: 10px;
+      margin: 10px;
+      text-align: center;
+    }
+    .success { background: rgba(34,197,94,0.8); }
+    .error { background: rgba(239,68,68,0.8); }
+  </style>
+</head>
+<body>
+  <h1>🔬 原始诊断测试</h1>
+ECHO is off.
+  <div class="test-result success">
+    <h2>✅ HTML加载成功</h2>
+    <p>基础HTML渲染正常</p>
+  </div>
+ECHO is off.
+  <div id="js-test" class="test-result">
+    <h2>⏳ JavaScript测试中...</h2>
+  </div>
+ECHO is off.
+  <div id="react-test" class="test-result">
+    <h2>⏳ React测试中...</h2>
+  </div>
+ECHO is off.
+  <div id="vite-test" class="test-result">
+    <h2>⏳ Vite模块测试中...</h2>
+  </div>
+ECHO is off.
+  <script>
+    // 测试基础JavaScript
+    try {
+      const jsTest = document.getElementById('js-test');
+      jsTest.className = 'test-result success';
+      jsTest.innerHTML = '<h2>✅ JavaScript正常</h2><p>基础JS功能工作正常</p>';
+    } catch(e) {
+      console.error('JavaScript错误:', e);
+    }
+ECHO is off.
+    // 测试ES模块和React
+    setTimeout(async function() {
+      const reactTest = document.getElementById('react-test');
+      const viteTest = document.getElementById('vite-test');
+ECHO is off.
+      try {
+        // 测试动态导入React
+        const React = await import('/node_modules/react/index.js');
+        reactTest.className = 'test-result success';
+        reactTest.innerHTML = '<h2>✅ React导入成功</h2><p>React库可以正常加载</p>';
+      } catch(e) {
+        reactTest.className = 'test-result error';
+        reactTest.innerHTML = '<h2>❌ React导入失败</h2><p>' + e.message + '</p>';
+        console.error('React导入错误:', e);
+      }
+ECHO is off.
+      try {
+        // 测试Vite的模块解析
+        const response = await fetch('/index.tsx');
+        if (response.ok) {
+          viteTest.className = 'test-result success';
+          viteTest.innerHTML = '<h2>✅ Vite模块解析正常</h2><p>TypeScript文件可以访问</p>';
+        } else {
+          throw new Error('HTTP ' + response.status);
+        }
+      } catch(e) {
+        viteTest.className = 'test-result error';
+        viteTest.innerHTML = '<h2>❌ Vite模块解析失败</h2><p>' + e.message + '</p>';
+        console.error('Vite模块错误:', e);
+      }
+    }, 1000);
+ECHO is off.
+    // 全局错误监听
+    window.addEventListener('error', function(e) {
+      console.error('全局错误:', e.error);
+      document.body.innerHTML += '<div class="test-result error"><h2>❌ 全局错误</h2><p>' + e.message + '</p></div>';
+    });
+  </script>
+</body>
+</html>

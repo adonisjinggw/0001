@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>火山引擎即梦AI API测试工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .config-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid;
+        }
+        .status-success {
+            background: #f0fff4;
+            border-color: #38a169;
+            color: #2f855a;
+        }
+        .status-error {
+            background: #fed7d7;
+            border-color: #e53e3e;
+            color: #c53030;
+        }
+        .status-warning {
+            background: #fffbeb;
+            border-color: #d69e2e;
+            color: #b7791f;
+        }
+        .status-info {
+            background: #ebf8ff;
+            border-color: #3182ce;
+            color: #2c5282;
+        }
+        .logs {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .api-info {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .api-info h3 {
+            margin-top: 0;
+            color: #234e52;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 火山引擎即梦AI API测试工具</h1>
+        
+        <div class="api-info">
+            <h3>🔍 重要说明</h3>
+            <p><strong>API端点:</strong> 使用正确的火山引擎端点：<code>https://visual.volcengineapi.com</code></p>
+            <p><strong>密钥格式:</strong> AccessKeyId:SecretAccessKey</p>
+            <p><strong>注意:</strong> 如果您在API配置界面看到示例URL（如api.example.com），请忽略，我们使用正确的端点</p>
+        </div>
+
+        <div class="config-section">
+            <h3>🔧 API配置</h3>
+            <div class="form-group">
+                <label for="accessKeyId">Access Key ID:</label>
+                <input type="text" id="accessKeyId" placeholder="输入您的Access Key ID" />
+            </div>
+            <div class="form-group">
+                <label for="secretAccessKey">Secret Access Key:</label>
+                <input type="password" id="secretAccessKey" placeholder="输入您的Secret Access Key" />
+            </div>
+            <button onclick="saveConfig()">💾 保存配置</button>
+            <button onclick="loadConfig()">📥 加载配置</button>
+            <button onclick="testConnection()">🔗 测试连接</button>
+        </div>
+
+        <div id="statusContainer"></div>
+        <div id="logsContainer"></div>
+    </div>
+
+    <script>
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] ${message}`);
+            
+            const logsContainer = document.getElementById('logsContainer');
+            if (!logsContainer.querySelector('.logs')) {
+                logsContainer.innerHTML = '<div class="logs" id="logs"></div>';
+            }
+            
+            const logs = document.getElementById('logs');
+            logs.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusContainer = document.getElementById('statusContainer');
+            statusContainer.innerHTML = `<div class="status-box status-${type}">${message}</div>`;
+            addLog(message);
+        }
+
+        function saveConfig() {
+            const accessKeyId = document.getElementById('accessKeyId').value.trim();
+            const secretAccessKey = document.getElementById('secretAccessKey').value.trim();
+            
+            if (!accessKeyId || !secretAccessKey) {
+                showStatus('❌ 请填写完整的API密钥信息', 'error');
+                return;
+            }
+
+            const config = {
+                imageGeneration: {
+                    enablePaid: true,
+                    provider: 'jiemeng',
+                    apiKey: `${accessKeyId}:${secretAccessKey}`,
+                    accessKeyId: accessKeyId,
+                    secretAccessKey: secretAccessKey
+                }
+            };
+            
+            localStorage.setItem('travel-generator-api-config', JSON.stringify(config));
+            showStatus('✅ API配置已保存', 'success');
+        }
+
+        function loadConfig() {
+            try {
+                const configJson = localStorage.getItem('travel-generator-api-config');
+                if (configJson) {
+                    const config = JSON.parse(configJson);
+                    if (config.imageGeneration?.accessKeyId && config.imageGeneration?.secretAccessKey) {
+                        document.getElementById('accessKeyId').value = config.imageGeneration.accessKeyId;
+                        document.getElementById('secretAccessKey').value = config.imageGeneration.secretAccessKey;
+                        showStatus('✅ 已加载API配置', 'success');
+                        return;
+                    }
+                }
+                showStatus('⚠️ 未找到已保存的配置', 'warning');
+            } catch (error) {
+                showStatus(`❌ 加载配置失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testConnection() {
+            const accessKeyId = document.getElementById('accessKeyId').value.trim();
+            const secretAccessKey = document.getElementById('secretAccessKey').value.trim();
+            
+            if (!accessKeyId || !secretAccessKey) {
+                showStatus('❌ 请先配置API密钥', 'error');
+                return;
+            }
+            
+            showStatus('🔍 开始API连接测试...', 'info');
+            
+            try {
+                // 直接调用项目中的JieMeng服务
+                if (typeof testJieMengApiConnection === 'function') {
+                    const result = await testJieMengApiConnection();
+                    if (result.success) {
+                        showStatus('✅ ' + result.message, 'success');
+                    } else {
+                        showStatus('❌ ' + result.message, 'error');
+                    }
+                } else {
+                    showStatus('⚠️ 请在项目环境中使用此测试工具', 'warning');
+                    addLog('提示：此测试页面需要在项目环境中运行以访问JieMeng服务');
+                }
+                
+            } catch (error) {
+                showStatus(`❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        window.onload = function() {
+            loadConfig();
+            showStatus('🚀 测试工具已就绪', 'info');
+            
+            // 检查是否在项目环境中
+            if (typeof testJieMengApiConnection !== 'function') {
+                showStatus('💡 请在浏览器中打开项目，然后在开发者控制台运行以下代码进行测试：', 'info');
+                addLog('import { testJieMengApiConnection } from "./services/jiemengService.js";');
+                addLog('testJieMengApiConnection().then(result => console.log(result));');
+            }
+        };
+    </script>
+</body>
+</html> 
